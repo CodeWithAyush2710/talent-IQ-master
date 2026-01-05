@@ -10,6 +10,7 @@ import { inngest, functions } from "./lib/inngest.js";
 
 import chatRoutes from "./routes/chatRoutes.js";
 import sessionRoutes from "./routes/sessionRoute.js";
+import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
@@ -21,9 +22,20 @@ app.use(express.json());
 app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
+// Webhook logging middleware
+app.use("/api/inngest", (req, res, next) => {
+  console.log("📨 Inngest webhook received:", {
+    method: req.method,
+    path: req.path,
+    body: req.body,
+  });
+  next();
+});
+
 app.use("/api/inngest", serve({ client: inngest, functions }));
 app.use("/api/chat", chatRoutes);
 app.use("/api/sessions", sessionRoutes);
+app.use("/api/users", userRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ msg: "api is up and running" });

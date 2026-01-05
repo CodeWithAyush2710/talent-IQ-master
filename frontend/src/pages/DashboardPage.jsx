@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router";
 import { useUser } from "@clerk/clerk-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useActiveSessions, useCreateSession, useMyRecentSessions } from "../hooks/useSessions";
+import axios from "../lib/axios";
 
 import Navbar from "../components/Navbar";
 import WelcomeSection from "../components/WelcomeSection";
@@ -20,6 +21,21 @@ function DashboardPage() {
 
   const { data: activeSessionsData, isLoading: loadingActiveSessions } = useActiveSessions();
   const { data: recentSessionsData, isLoading: loadingRecentSessions } = useMyRecentSessions();
+
+  // Sync user with database on login
+  useEffect(() => {
+    const syncUser = async () => {
+      try {
+        await axios.post("/users/sync");
+      } catch (error) {
+        console.error("Error syncing user:", error);
+      }
+    };
+
+    if (user?.id) {
+      syncUser();
+    }
+  }, [user?.id]);
 
   const handleCreateRoom = () => {
     if (!roomConfig.problem || !roomConfig.difficulty) return;
