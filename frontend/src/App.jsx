@@ -17,7 +17,7 @@ function App() {
   useEffect(() => {
     if (isSignedIn && isLoaded) {
       axiosInstance
-        .post("/user/sync")
+        .post("/users/sync")
         .then(() => console.log("✅ User synced to MongoDB"))
         .catch((error) => console.error("❌ Error syncing user:", error));
     }
