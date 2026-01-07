@@ -1,10 +1,10 @@
 import express from "express";
-import { protectRoute } from "../middleware/protectRoute.js";
+import { requireAuth } from "@clerk/express";
 import { syncUserToDb } from "../controllers/userController.js";
 
 const router = express.Router();
 
 // Sync user from Clerk to MongoDB (call this after login)
-router.post("/sync", protectRoute, syncUserToDb);
+router.post("/sync", requireAuth(), syncUserToDb);
 
 export default router;
