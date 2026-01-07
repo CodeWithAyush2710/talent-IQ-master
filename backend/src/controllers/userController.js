@@ -1,42 +1,56 @@
 import User from "../models/User.js";
+import { upsertStreamUser } from "../lib/stream.js";
+
+import { clerkClient } from "@clerk/express";
 
 export async function syncUserToDb(req, res) {
   try {
-    const clerkUser = req.auth();
-    const { firstName, lastName, emailAddresses, imageUrl } = clerkUser;
+    const { userId } = req.auth();
+    console.log("🔍 Syncing user:", userId); // Debug log
 
-    console.log("🔍 Syncing user:", clerkUser.userId); // Debug log
-
-    if (!clerkUser.userId) {
+    if (!userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    // Check if user already exists in DB
-    let user = await User.findOne({ clerkId: clerkUser.userId });
+    // Fetch user details from Clerk
+    const user = await clerkClient.users.getUser(userId);
+    const { firstName, lastName, emailAddresses, imageUrl } = user;
+    const email = emailAddresses[0]?.emailAddress || "";
 
-    if (!user) {
+    // Sync user to Stream
+    await upsertStreamUser({
+      id: userId,
+      name: `${firstName || ""} ${lastName || ""}`.trim(),
+      image: imageUrl || "",
+      email: email,
+    });
+
+    // Check if user already exists in DB
+    let dbUser = await User.findOne({ clerkId: userId });
+
+    if (!dbUser) {
       // Create new user
-      user = new User({
-        clerkId: clerkUser.userId,
+      dbUser = new User({
+        clerkId: userId,
         name: `${firstName || ""} ${lastName || ""}`.trim(),
-        email: emailAddresses[0]?.emailAddress || "",
+        email: email,
         profileImage: imageUrl || "",
       });
 
-      await user.save();
-      console.log("✅ New user created:", user._id); // Debug log
+      await dbUser.save();
+      console.log("✅ New user created:", dbUser._id); // Debug log
     } else {
       // Update existing user (in case profile changed)
-      user.name = `${firstName || ""} ${lastName || ""}`.trim();
-      user.email = emailAddresses[0]?.emailAddress || "";
-      user.profileImage = imageUrl || "";
-      await user.save();
-      console.log("✅ User updated:", user._id); // Debug log
+      dbUser.name = `${firstName || ""} ${lastName || ""}`.trim();
+      dbUser.email = email;
+      dbUser.profileImage = imageUrl || "";
+      await dbUser.save();
+      console.log("✅ User updated:", dbUser._id); // Debug log
     }
 
     res.status(200).json({
       message: "User synced successfully",
-      user,
+      user: dbUser,
     });
   } catch (error) {
     console.error("Error in syncUserToDb:", error.message);
