@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import { upsertStreamUser } from "../lib/stream.js";
 
 import { clerkClient } from "@clerk/express";
 
@@ -15,6 +16,14 @@ export async function syncUserToDb(req, res) {
     const user = await clerkClient.users.getUser(userId);
     const { firstName, lastName, emailAddresses, imageUrl } = user;
     const email = emailAddresses[0]?.emailAddress || "";
+
+    // Sync user to Stream
+    await upsertStreamUser({
+      id: userId,
+      name: `${firstName || ""} ${lastName || ""}`.trim(),
+      image: imageUrl || "",
+      email: email,
+    });
 
     // Check if user already exists in DB
     let dbUser = await User.findOne({ clerkId: userId });
