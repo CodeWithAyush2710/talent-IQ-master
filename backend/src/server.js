@@ -21,12 +21,6 @@ const __dirname = path.dirname(__filename);
 // middleware
 app.use(express.json());
 
-// GLOBAL HEADER LOGGING
-app.use((req, res, next) => {
-  console.log(`➡️ [REQUEST] ${req.method} ${req.path}`);
-  next();
-});
-
 // credentials:true meaning?? => server allows a browser to include cookies on request
 app.use(
   cors({
@@ -41,7 +35,15 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
+
+// GLOBAL HEADER LOGGING (Moved after Clerk to access auth state)
+app.use((req, res, next) => {
+  const auth = req.auth ? req.auth() : null;
+  console.log(`➡️ [REQUEST] ${req.method} ${req.path} | User: ${auth?.userId || "Guest"}`);
+  next();
+});
 
 // Webhook logging middleware
 app.use("/api/inngest", (req, res, next) => {
