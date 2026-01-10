@@ -3,29 +3,45 @@ import Session from "../models/Session.js";
 
 export async function createSession(req, res) {
   try {
+    console.log("🔍 [SESSION] createSession called");
     const { problem, difficulty } = req.body;
+
+    // Ensure req.user exists (protectRoute should have set it)
+    if (!req.user) {
+      console.error("❌ [SESSION] req.user is missing! protectRoute failed or skipped?");
+      return res.status(401).json({ message: "Unauthorized - User not loaded" });
+    }
+
     const userId = req.user._id;
     const clerkId = req.user.clerkId;
+    console.log(`🔍 [SESSION] User: ${userId} (Clerk: ${clerkId}) trying to create session`);
 
     if (!problem || !difficulty) {
+      console.error("❌ [SESSION] Missing problem or difficulty");
       return res.status(400).json({ message: "Problem and difficulty are required" });
     }
 
     // generate a unique call id for stream video
     const callId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    console.log("🔍 [SESSION] Generated Call ID:", callId);
 
     // create session in db
+    console.log("🔍 [SESSION] Creating Session in MongoDB...");
     const session = await Session.create({ problem, difficulty, host: userId, callId });
+    console.log("✅ [SESSION] MongoDB Session Created:", session._id);
 
     // create stream video call
+    console.log("🔍 [SESSION] Creating Stream Call...");
     await streamClient.video.call("default", callId).getOrCreate({
       data: {
         created_by_id: clerkId,
         custom: { problem, difficulty, sessionId: session._id.toString() },
       },
     });
+    console.log("✅ [SESSION] Stream Call Created");
 
     // chat messaging
+    console.log("🔍 [SESSION] Creating Stream Chat Channel...");
     const channel = chatClient.channel("messaging", callId, {
       name: `${problem} Session`,
       created_by_id: clerkId,
@@ -33,11 +49,13 @@ export async function createSession(req, res) {
     });
 
     await channel.create();
+    console.log("✅ [SESSION] Stream Channel Created");
 
     res.status(201).json({ session });
   } catch (error) {
-    console.log("Error in createSession controller:", error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    console.error("💥 [SESSION] CRITICAL ERROR in createSession controller:", error);
+    console.error(error.stack);
+    res.status(500).json({ message: "Internal Server Error", error: error.message });
   }
 }
 
