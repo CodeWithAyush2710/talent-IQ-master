@@ -20,6 +20,13 @@ const __dirname = path.dirname(__filename);
 
 // middleware
 app.use(express.json());
+
+// GLOBAL HEADER LOGGING
+app.use((req, res, next) => {
+  console.log(`➡️ [REQUEST] ${req.method} ${req.path}`);
+  next();
+});
+
 // credentials:true meaning?? => server allows a browser to include cookies on request
 app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
