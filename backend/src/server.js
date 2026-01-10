@@ -28,7 +28,19 @@ app.use((req, res, next) => {
 });
 
 // credentials:true meaning?? => server allows a browser to include cookies on request
-app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || origin === "http://localhost:5173" || origin === ENV.CLIENT_URL || origin.endsWith(".vercel.app")) {
+        callback(null, true);
+      } else {
+        console.log("🚫 [CORS] Blocked request from:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
 // Webhook logging middleware

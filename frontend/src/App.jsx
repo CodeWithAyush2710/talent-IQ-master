@@ -13,6 +13,8 @@ import axiosInstance from "./lib/axios";
 function App() {
   const { isSignedIn, isLoaded } = useUser();
 
+  console.log("🔍 [DEBUG] Current VITE_API_URL:", import.meta.env.VITE_API_URL); // Verify env var
+
   // Sync user to MongoDB on login
   useEffect(() => {
     if (isSignedIn && isLoaded) {
