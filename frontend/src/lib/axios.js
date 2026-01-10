@@ -5,4 +5,10 @@ const axiosInstance = axios.create({
   withCredentials: true, // by adding this field browser will send the cookies to server automatically, on every single req
 });
 
+axiosInstance.interceptors.request.use((config) => {
+  const fullUrl = config.baseURL + config.url;
+  console.log(`🔍 [AXIOS] Request: ${config.method.toUpperCase()} ${fullUrl}`);
+  return config;
+});
+
 export default axiosInstance;
