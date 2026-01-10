@@ -14,8 +14,6 @@ function App() {
   const { isSignedIn, isLoaded } = useUser();
   const { getToken } = useAuth(); // Get token function
 
-  console.log("🔍 [DEBUG] Current VITE_API_URL:", import.meta.env.VITE_API_URL);
-
   // Inject Token into Axios
   useEffect(() => {
     if (isSignedIn) {
