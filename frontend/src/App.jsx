@@ -1,9 +1,9 @@
-import { useUser } from "@clerk/clerk-react";
+import { useAuth, useUser } from "@clerk/clerk-react";
 import { Navigate, Route, Routes } from "react-router";
-import HomePage from "./pages/HomePage";
-
 import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
+
+import HomePage from "./pages/HomePage";
 import DashboardPage from "./pages/DashboardPage";
 import ProblemPage from "./pages/ProblemPage";
 import ProblemsPage from "./pages/ProblemsPage";
@@ -12,8 +12,27 @@ import axiosInstance from "./lib/axios";
 
 function App() {
   const { isSignedIn, isLoaded } = useUser();
+  const { getToken } = useAuth(); // Get token function
 
-  console.log("🔍 [DEBUG] Current VITE_API_URL:", import.meta.env.VITE_API_URL); // Verify env var
+  console.log("🔍 [DEBUG] Current VITE_API_URL:", import.meta.env.VITE_API_URL);
+
+  // Inject Token into Axios
+  useEffect(() => {
+    if (isSignedIn) {
+      const interceptorId = axiosInstance.interceptors.request.use(async (config) => {
+        const token = await getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+          // console.log("🔑 [AXIOS] Token injected");
+        }
+        return config;
+      });
+
+      return () => {
+        axiosInstance.interceptors.request.eject(interceptorId);
+      };
+    }
+  }, [isSignedIn, getToken]);
 
   // Sync user to MongoDB on login
   useEffect(() => {
