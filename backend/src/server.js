@@ -3,6 +3,7 @@ import path from "path";
 import cors from "cors";
 import { serve } from "inngest/express";
 import { clerkMiddleware } from "@clerk/express";
+import { fileURLToPath } from "url"; // Import needed for ES modules
 
 import { ENV } from "./lib/env.js";
 import { connectDB } from "./lib/db.js";
@@ -14,7 +15,8 @@ import userRoutes from "./routes/userRoutes.js";
 
 const app = express();
 
-const __dirname = path.resolve();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // middleware
 app.use(express.json());
@@ -43,10 +45,10 @@ app.get("/health", (req, res) => {
 
 // make our app ready for deployment
 if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  app.use(express.static(path.join(__dirname, "../../frontend/dist")));
 
   app.get(/.*/, (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "../../frontend", "dist", "index.html"));
   });
 }
 
