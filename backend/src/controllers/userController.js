@@ -54,7 +54,7 @@ export async function syncUserToDb(req, res) {
         clerkId: userId,
         name: `${firstName || ""} ${lastName || ""}`.trim(),
         email: email,
-        profileImage: imageUrl || "";
+        profileImage: imageUrl || "",
       });
 
       await dbUser.save();
