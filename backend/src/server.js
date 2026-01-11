@@ -38,13 +38,6 @@ app.use(
 
 app.use(clerkMiddleware()); // this adds auth field to request object: req.auth()
 
-// GLOBAL HEADER LOGGING (Moved after Clerk to access auth state)
-app.use((req, res, next) => {
-  const auth = req.auth ? req.auth() : null;
-  console.log(`➡️ [REQUEST] ${req.method} ${req.path} | User: ${auth?.userId || "Guest"}`);
-  next();
-});
-
 // Webhook logging middleware
 app.use("/api/inngest", (req, res, next) => {
   console.log("📨 Inngest webhook received:", {
