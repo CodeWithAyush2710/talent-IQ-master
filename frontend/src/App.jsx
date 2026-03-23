@@ -9,6 +9,7 @@ import ProblemPage from "./pages/ProblemPage";
 import ProblemsPage from "./pages/ProblemsPage";
 import SessionPage from "./pages/SessionPage";
 import axiosInstance from "./lib/axios";
+import Footer from "./components/Footer";
 
 function App() {
   const { isSignedIn, isLoaded } = useUser();
@@ -57,6 +58,7 @@ function App() {
       </Routes>
 
       <Toaster toastOptions={{ duration: 3000 }} />
+      <Footer />
     </>
   );
 }
